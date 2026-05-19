@@ -6,10 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LUXIA_EMBEDDING_URL = os.getenv("LUXIA_EMBEDDING_URL", "https://unifier.lucasai.io/chains/synapses")
-LUXIA_MODEL = os.getenv("LUXIA_EMBEDDING_MODEL", "luxia-embedding-small")
-LUXIA_APP_NAME = os.getenv("LUXIA_APP_NAME", "opinion-embedding-map")
-LUXIA_APP_ID = os.getenv("LUXIA_APP_ID", "opinion-embedding-map-local")
+LUXIA_EMBEDDING_URL = os.getenv("LUXIA_EMBEDDING_URL", "https://bridge.luxiacloud.com/luxia/v1/embedding")
 
 
 class LuxiaEmbeddingError(RuntimeError):
@@ -24,17 +21,10 @@ async def get_embeddings(texts: list[str]) -> list[list[float]]:
     if not api_key:
         raise LuxiaEmbeddingError("LUXIA_API_KEY is missing. Set it in backend/.env.")
 
-    payload: dict[str, Any] = {
-        "name": LUXIA_APP_NAME,
-        "app_id": LUXIA_APP_ID,
-        "init_param": {
-            "model": LUXIA_MODEL,
-            "inputs": texts,
-        },
-    }
+    payload: dict[str, Any] = {"inputs": texts}
 
     headers = {
-        "api_key": api_key,
+        "apikey": api_key,
         "Content-Type": "application/json",
     }
 
@@ -51,15 +41,7 @@ async def get_embeddings(texts: list[str]) -> list[list[float]]:
     except ValueError as exc:
         raise LuxiaEmbeddingError("LUXIA embedding API returned invalid JSON.") from exc
 
-    data = body.get("data")
-    if not isinstance(data, list):
-        raise LuxiaEmbeddingError("LUXIA embedding API response does not include a valid data list.")
-
-    try:
-        ordered = sorted(data, key=lambda item: item["index"])
-        embeddings = [item["embedding"] for item in ordered]
-    except (KeyError, TypeError) as exc:
-        raise LuxiaEmbeddingError("LUXIA embedding API response has an unexpected embedding object format.") from exc
+    embeddings = _extract_embeddings(body)
 
     if len(embeddings) != len(texts):
         raise LuxiaEmbeddingError(f"LUXIA returned {len(embeddings)} embeddings for {len(texts)} input texts.")
@@ -68,3 +50,20 @@ async def get_embeddings(texts: list[str]) -> list[list[float]]:
         raise LuxiaEmbeddingError("LUXIA returned an empty or invalid embedding vector.")
 
     return embeddings
+
+
+def _extract_embeddings(body: dict[str, Any]) -> list[list[float]]:
+    if isinstance(body.get("embeddings"), list):
+        return body["embeddings"]
+
+    if isinstance(body.get("data"), list):
+        data = body["data"]
+        if data and isinstance(data[0], dict) and "embedding" in data[0]:
+            return [item["embedding"] for item in sorted(data, key=lambda item: item.get("index", 0))]
+        if data and isinstance(data[0], list):
+            return data
+
+    if isinstance(body.get("result"), list):
+        return body["result"]
+
+    raise LuxiaEmbeddingError("LUXIA embedding API response does not include recognizable embeddings.")
