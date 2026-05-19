@@ -140,6 +140,11 @@ h1 {
   padding-bottom: 16px;
 }
 
+.representative-box {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 0;
+}
+
 .meta-row {
   display: flex;
   flex-wrap: wrap;
@@ -158,15 +163,21 @@ h1 {
 }
 
 .selected-opinion p,
+.representative-box p,
 .similar-item p {
   margin: 12px 0 0;
   color: #374151;
   line-height: 1.65;
 }
 
-.detail-panel h2 {
+.detail-panel h2,
+.representative-box h2 {
   margin: 18px 0 12px;
   font-size: 18px;
+}
+
+.representative-box h2 {
+  margin-top: 0;
 }
 
 .similar-list {

@@ -12,8 +12,13 @@ export interface SimilarOpinion extends Opinion {
   interpretation?: string;
 }
 
+export interface ClusterRepresentative extends Opinion {}
+
 export interface AnalyzedOpinion extends Opinion {
   x: number;
   y: number;
+  clusterId: number;
+  clusterLabel: string;
+  clusterRepresentative: ClusterRepresentative;
   similarOpinions: SimilarOpinion[];
 }

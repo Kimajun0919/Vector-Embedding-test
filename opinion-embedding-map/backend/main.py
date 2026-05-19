@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from clustering import build_embedding_clusters
 from luxia_client import LuxiaEmbeddingError, get_embeddings
 from projection import project_embeddings_umap
 from sample_data import SAMPLE_OPINIONS
@@ -53,6 +54,7 @@ async def analyze_opinions(request: Optional[AnalyzeRequest] = None):
     try:
         embeddings = await get_embeddings(texts)
         similar_by_id = find_top_k_similar(opinions, embeddings, k=5)
+        cluster_by_id = build_embedding_clusters(opinions, embeddings, n_clusters=6)
         coordinates = project_embeddings_umap(embeddings)
     except LuxiaEmbeddingError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -65,6 +67,7 @@ async def analyze_opinions(request: Optional[AnalyzeRequest] = None):
             **opinion,
             "x": point["x"],
             "y": point["y"],
+            **cluster_by_id[opinion["id"]],
             "similarOpinions": similar_by_id[opinion["id"]],
         })
 

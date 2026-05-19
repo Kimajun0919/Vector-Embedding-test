@@ -24,9 +24,20 @@ export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps)
           <strong>{opinion.id}</strong>
           <span>{opinion.responseType}</span>
           <span>{opinion.category}</span>
+          <span>{opinion.clusterLabel}</span>
         </div>
         <p>{opinion.text}</p>
       </div>
+
+      <section className="representative-box">
+        <h2>군집 대표 의견</h2>
+        <div className="meta-row">
+          <strong>{opinion.clusterRepresentative.id}</strong>
+          <span>{opinion.clusterRepresentative.responseType}</span>
+          <span>{opinion.clusterRepresentative.category}</span>
+        </div>
+        <p>{opinion.clusterRepresentative.text}</p>
+      </section>
 
       <h2>Top 5 유사 의견</h2>
       <div className="similar-list">

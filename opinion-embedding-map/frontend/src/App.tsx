@@ -51,7 +51,7 @@ export default function App() {
         </p>
         <p>
           샘플 응답 {sampleOpinions.length}건을 LUXIA Cloud Vector Embedding API로 임베딩한 뒤 UMAP으로 시각화합니다.
-          색상은 주관식, 객관식-단일, 객관식-복수 응답 유형을 나타냅니다.
+          색상은 임베딩 기반 군집을 나타내며, 각 군집은 대표 의견을 기준으로 해석합니다.
         </p>
       </section>
 

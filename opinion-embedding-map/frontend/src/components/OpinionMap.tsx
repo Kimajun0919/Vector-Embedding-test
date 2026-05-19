@@ -8,44 +8,20 @@ interface OpinionMapProps {
   onSelectOpinion: (opinion: AnalyzedOpinion) => void;
 }
 
-const responseTypeColors: Record<string, string> = {
-  "주관식": "#2563eb",
-  "객관식-단일": "#059669",
-  "객관식-복수": "#7c3aed"
-};
+const clusterColors = [
+  "#2563eb",
+  "#059669",
+  "#7c3aed",
+  "#ea580c",
+  "#0891b2",
+  "#be123c",
+  "#4f46e5",
+  "#16a34a"
+];
 
 export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinion }: OpinionMapProps) {
-  const responseTypes = ["주관식", "객관식-단일", "객관식-복수"];
-
-  const data = responseTypes.map((responseType) => {
-    const group = opinions.filter((opinion) => opinion.responseType === responseType);
-    return {
-      type: "scatter" as const,
-      mode: "markers" as const,
-      name: responseType,
-      x: group.map((opinion) => opinion.x),
-      y: group.map((opinion) => opinion.y),
-      text: group.map((opinion) => `${opinion.id}<br>${opinion.responseType} / ${opinion.category}<br>${opinion.text}`),
-      customdata: group.map((opinion) => [opinion.id]),
-      hovertemplate: "%{text}<extra></extra>",
-      marker: {
-        color: responseTypeColors[responseType],
-        size: group.map((opinion) => opinion.id === selectedOpinionId ? 17 : 11),
-        opacity: 0.86,
-        line: {
-          color: group.map((opinion) => opinion.id === selectedOpinionId ? "#111827" : "#ffffff"),
-          width: group.map((opinion) => opinion.id === selectedOpinionId ? 3 : 1)
-        }
-      }
-    };
-  });
-
   const handleClick = (event: PlotMouseEvent) => {
-    const point = event.points[0];
-    const traceCustomData = point?.data?.customdata as (string[] | string)[] | undefined;
-    const fallbackCustomData = typeof point?.pointNumber === "number" ? traceCustomData?.[point.pointNumber] : undefined;
-    const rawCustomData = (point?.customdata ?? fallbackCustomData) as string[] | string | undefined;
-    const id = Array.isArray(rawCustomData) ? rawCustomData[0] : rawCustomData;
+    const id = event.points[0]?.customdata as string | undefined;
     const selected = opinions.find((opinion) => opinion.id === id);
     if (selected) {
       onSelectOpinion(selected);
@@ -55,7 +31,30 @@ export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinio
   return (
     <section className="map-panel">
       <Plot
-        data={data}
+        data={[
+          {
+            type: "scatter",
+            mode: "markers",
+            name: "임베딩 군집",
+            x: opinions.map((opinion) => opinion.x),
+            y: opinions.map((opinion) => opinion.y),
+            text: opinions.map(
+              (opinion) =>
+                `${opinion.id}<br>${opinion.clusterLabel}<br>${opinion.responseType} / ${opinion.category}<br>${opinion.text}`
+            ),
+            customdata: opinions.map((opinion) => opinion.id),
+            hovertemplate: "%{text}<extra></extra>",
+            marker: {
+              color: opinions.map((opinion) => clusterColors[opinion.clusterId % clusterColors.length]),
+              size: opinions.map((opinion) => (opinion.id === selectedOpinionId ? 18 : 11)),
+              opacity: 0.88,
+              line: {
+                color: opinions.map((opinion) => (opinion.id === selectedOpinionId ? "#111827" : "#ffffff")),
+                width: opinions.map((opinion) => (opinion.id === selectedOpinionId ? 3 : 1))
+              }
+            }
+          }
+        ]}
         layout={{
           autosize: true,
           height: 620,
@@ -64,7 +63,7 @@ export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinio
           plot_bgcolor: "#f8fafc",
           xaxis: { title: { text: "UMAP X" }, zeroline: false, gridcolor: "#e5e7eb" },
           yaxis: { title: { text: "UMAP Y" }, zeroline: false, gridcolor: "#e5e7eb" },
-          legend: { orientation: "h", x: 0, y: 1.08 },
+          showlegend: false,
           hoverlabel: { align: "left" }
         }}
         config={{ responsive: true, displayModeBar: true }}
