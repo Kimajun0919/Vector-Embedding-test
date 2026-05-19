@@ -18,6 +18,7 @@ export interface AnalyzedOpinion extends Opinion {
   x: number;
   y: number;
   clusterId: number;
+  clusterName: string;
   clusterLabel: string;
   clusterRepresentative: ClusterRepresentative;
   similarOpinions: SimilarOpinion[];

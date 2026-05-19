@@ -40,7 +40,7 @@ export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinio
             y: opinions.map((opinion) => opinion.y),
             text: opinions.map(
               (opinion) =>
-                `${opinion.id}<br>${opinion.clusterLabel}<br>${opinion.responseType} / ${opinion.category}<br>${opinion.text}`
+                `${opinion.id}<br>${opinion.clusterName}<br>${opinion.responseType} / ${opinion.category}<br>${opinion.text}`
             ),
             customdata: opinions.map((opinion) => opinion.id),
             hovertemplate: "%{text}<extra></extra>",

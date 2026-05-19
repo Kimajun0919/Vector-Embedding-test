@@ -14,7 +14,8 @@ def build_embedding_clusters(opinions, embeddings, n_clusters: int = 6) -> dict[
         return {
             opinions[0]["id"]: {
                 "clusterId": 0,
-                "clusterLabel": f"군집 1 · {opinions[0]['id']}",
+                "clusterName": _cluster_name(opinions[0]),
+                "clusterLabel": _cluster_label(opinions[0]),
                 "clusterRepresentative": representative,
             }
         }
@@ -36,7 +37,8 @@ def build_embedding_clusters(opinions, embeddings, n_clusters: int = 6) -> dict[
         representative = representatives[int(cluster_id)]
         result[opinion["id"]] = {
             "clusterId": int(cluster_id),
-            "clusterLabel": f"군집 {int(cluster_id) + 1} · {representative['id']}",
+            "clusterName": _cluster_name(representative),
+            "clusterLabel": _cluster_label(representative),
             "clusterRepresentative": representative,
         }
 
@@ -56,3 +58,12 @@ def _representative_payload(opinion):
         "responseType": opinion["responseType"],
         "category": opinion["category"],
     }
+
+
+def _cluster_name(opinion) -> str:
+    text = opinion["text"].strip()
+    return text if len(text) <= 34 else f"{text[:34]}..."
+
+
+def _cluster_label(opinion) -> str:
+    return f"대표 의견 {opinion['id']}: {_cluster_name(opinion)}"
