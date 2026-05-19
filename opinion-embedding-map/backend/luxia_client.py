@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 LUXIA_EMBEDDING_URL = os.getenv("LUXIA_EMBEDDING_URL", "https://bridge.luxiacloud.com/luxia/v1/embedding")
+LUXIA_BATCH_SIZE = int(os.getenv("LUXIA_EMBEDDING_BATCH_SIZE", "20"))
 
 
 class LuxiaEmbeddingError(RuntimeError):
@@ -21,18 +22,19 @@ async def get_embeddings(texts: list[str]) -> list[list[float]]:
     if not api_key:
         raise LuxiaEmbeddingError("LUXIA_API_KEY is missing. Set it in backend/.env.")
 
-    payload: dict[str, Any] = {"inputs": texts}
-
     headers = {
         "apikey": api_key,
         "Content-Type": "application/json",
     }
 
+    embeddings: list[list[float]] = []
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
-            response = await client.post(LUXIA_EMBEDDING_URL, headers=headers, json=payload)
-            response.raise_for_status()
-            body = response.json()
+            for start in range(0, len(texts), LUXIA_BATCH_SIZE):
+                batch = texts[start:start + LUXIA_BATCH_SIZE]
+                response = await client.post(LUXIA_EMBEDDING_URL, headers=headers, json={"inputs": batch})
+                response.raise_for_status()
+                embeddings.extend(_extract_embeddings(response.json()))
     except httpx.HTTPStatusError as exc:
         detail = exc.response.text[:1000]
         raise LuxiaEmbeddingError(f"LUXIA embedding API returned HTTP {exc.response.status_code}: {detail}") from exc
@@ -40,8 +42,6 @@ async def get_embeddings(texts: list[str]) -> list[list[float]]:
         raise LuxiaEmbeddingError(f"LUXIA embedding API request failed: {exc}") from exc
     except ValueError as exc:
         raise LuxiaEmbeddingError("LUXIA embedding API returned invalid JSON.") from exc
-
-    embeddings = _extract_embeddings(body)
 
     if len(embeddings) != len(texts):
         raise LuxiaEmbeddingError(f"LUXIA returned {len(embeddings)} embeddings for {len(texts)} input texts.")

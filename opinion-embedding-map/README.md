@@ -56,6 +56,7 @@ Vite 개발 서버는 기본적으로 `http://localhost:5173`에서 실행되며
 ```env
 LUXIA_API_KEY=your_luxia_api_key_here
 LUXIA_EMBEDDING_URL=https://bridge.luxiacloud.com/luxia/v1/embedding
+LUXIA_EMBEDDING_BATCH_SIZE=20
 ```
 
 LUXIA 문서 기준으로 백엔드는 `POST https://bridge.luxiacloud.com/luxia/v1/embedding`에 `apikey` 헤더와 `inputs` 본문을 보내 임베딩을 생성합니다.

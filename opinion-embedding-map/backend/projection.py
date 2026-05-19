@@ -9,6 +9,8 @@ def project_embeddings_umap(embeddings: list[list[float]]) -> list[dict]:
     vectors = np.asarray(embeddings, dtype=float)
     if len(vectors) == 1:
         return [{"x": 0.0, "y": 0.0}]
+    if len(vectors) == 2:
+        return [{"x": -1.0, "y": 0.0}, {"x": 1.0, "y": 0.0}]
 
     reducer = umap.UMAP(
         n_components=2,
