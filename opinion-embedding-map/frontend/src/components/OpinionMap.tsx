@@ -21,8 +21,19 @@ const clusterColors = [
 
 export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinion }: OpinionMapProps) {
   const handleClick = (event: PlotMouseEvent) => {
-    const id = event.points[0]?.customdata as string | undefined;
-    const selected = opinions.find((opinion) => opinion.id === id);
+    const point = event.points[0];
+    const pointIndex = typeof point?.pointIndex === "number"
+      ? point.pointIndex
+      : typeof point?.pointNumber === "number"
+        ? point.pointNumber
+        : undefined;
+    const id = point?.customdata as string | undefined;
+    const selected = id
+      ? opinions.find((opinion) => opinion.id === id)
+      : pointIndex !== undefined
+        ? opinions[pointIndex]
+        : undefined;
+
     if (selected) {
       onSelectOpinion(selected);
     }
@@ -58,6 +69,7 @@ export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinio
         layout={{
           autosize: true,
           height: 620,
+          clickmode: "event+select",
           margin: { l: 54, r: 22, t: 24, b: 54 },
           paper_bgcolor: "#ffffff",
           plot_bgcolor: "#f8fafc",
