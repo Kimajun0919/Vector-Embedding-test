@@ -1,9 +1,9 @@
-export type Stance = "찬성" | "반대" | "조건부" | "기타";
+export type ResponseType = "주관식" | "객관식-단일" | "객관식-복수";
 
 export interface Opinion {
   id: string;
   text: string;
-  stance: Stance | string;
+  responseType: ResponseType | string;
   category: string;
 }
 

@@ -49,7 +49,10 @@ export default function App() {
           이 의견 지도는 의견 간 의미적 유사도를 기반으로 배치됩니다. x축과 y축 자체에는 고정된 의미가 없으며,
           가까운 점일수록 의미적으로 유사한 의견입니다.
         </p>
-        <p>샘플 의견 {sampleOpinions.length}건을 LUXIA Cloud Vector Embedding API로 임베딩한 뒤 UMAP으로 시각화합니다.</p>
+        <p>
+          샘플 응답 {sampleOpinions.length}건을 LUXIA Cloud Vector Embedding API로 임베딩한 뒤 UMAP으로 시각화합니다.
+          색상은 주관식, 객관식-단일, 객관식-복수 응답 유형을 나타냅니다.
+        </p>
       </section>
 
       {error && <div className="error-box">{error}</div>}

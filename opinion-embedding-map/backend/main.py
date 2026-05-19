@@ -13,7 +13,7 @@ from similarity import find_top_k_similar
 class Opinion(BaseModel):
     id: str
     text: str
-    stance: str
+    responseType: str
     category: str
 
 

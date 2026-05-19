@@ -8,29 +8,28 @@ interface OpinionMapProps {
   onSelectOpinion: (opinion: AnalyzedOpinion) => void;
 }
 
-const stanceColors: Record<string, string> = {
-  "찬성": "#2563eb",
-  "반대": "#dc2626",
-  "조건부": "#059669",
-  "기타": "#7c3aed"
+const responseTypeColors: Record<string, string> = {
+  "주관식": "#2563eb",
+  "객관식-단일": "#059669",
+  "객관식-복수": "#7c3aed"
 };
 
 export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinion }: OpinionMapProps) {
-  const stances = ["찬성", "반대", "조건부", "기타"];
+  const responseTypes = ["주관식", "객관식-단일", "객관식-복수"];
 
-  const data = stances.map((stance) => {
-    const group = opinions.filter((opinion) => opinion.stance === stance);
+  const data = responseTypes.map((responseType) => {
+    const group = opinions.filter((opinion) => opinion.responseType === responseType);
     return {
-      type: "scattergl" as const,
+      type: "scatter" as const,
       mode: "markers" as const,
-      name: stance,
+      name: responseType,
       x: group.map((opinion) => opinion.x),
       y: group.map((opinion) => opinion.y),
-      text: group.map((opinion) => `${opinion.id}<br>${opinion.stance} / ${opinion.category}<br>${opinion.text}`),
-      customdata: group.map((opinion) => opinion.id),
+      text: group.map((opinion) => `${opinion.id}<br>${opinion.responseType} / ${opinion.category}<br>${opinion.text}`),
+      customdata: group.map((opinion) => [opinion.id]),
       hovertemplate: "%{text}<extra></extra>",
       marker: {
-        color: stanceColors[stance],
+        color: responseTypeColors[responseType],
         size: group.map((opinion) => opinion.id === selectedOpinionId ? 17 : 11),
         opacity: 0.86,
         line: {
@@ -42,7 +41,11 @@ export default function OpinionMap({ opinions, selectedOpinionId, onSelectOpinio
   });
 
   const handleClick = (event: PlotMouseEvent) => {
-    const id = event.points[0]?.customdata as string | undefined;
+    const point = event.points[0];
+    const traceCustomData = point?.data?.customdata as (string[] | string)[] | undefined;
+    const fallbackCustomData = typeof point?.pointNumber === "number" ? traceCustomData?.[point.pointNumber] : undefined;
+    const rawCustomData = (point?.customdata ?? fallbackCustomData) as string[] | string | undefined;
+    const id = Array.isArray(rawCustomData) ? rawCustomData[0] : rawCustomData;
     const selected = opinions.find((opinion) => opinion.id === id);
     if (selected) {
       onSelectOpinion(selected);

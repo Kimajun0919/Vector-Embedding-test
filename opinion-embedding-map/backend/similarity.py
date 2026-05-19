@@ -42,7 +42,7 @@ def find_top_k_similar(opinions, embeddings, k: int = 5) -> dict[str, list[dict]
             scored.append({
                 "id": candidate["id"],
                 "text": candidate["text"],
-                "stance": candidate["stance"],
+                "responseType": candidate["responseType"],
                 "category": candidate["category"],
                 "similarity": score,
                 "interpretation": similarity_label(score),

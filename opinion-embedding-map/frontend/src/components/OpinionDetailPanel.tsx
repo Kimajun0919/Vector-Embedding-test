@@ -22,7 +22,7 @@ export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps)
       <div className="selected-opinion">
         <div className="meta-row">
           <strong>{opinion.id}</strong>
-          <span>{opinion.stance}</span>
+          <span>{opinion.responseType}</span>
           <span>{opinion.category}</span>
         </div>
         <p>{opinion.text}</p>
@@ -35,7 +35,7 @@ export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps)
             <div className="meta-row">
               <strong>{similar.id}</strong>
               <span>{formatSimilarity(similar.similarity)}</span>
-              <span>{similar.stance}</span>
+              <span>{similar.responseType}</span>
               <span>{similar.category}</span>
             </div>
             <p>{similar.text}</p>
