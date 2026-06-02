@@ -24,6 +24,18 @@ function formatCoordinate(value?: number): string {
   return value.toFixed(2);
 }
 
+function assignmentLabel(opinion: AnalyzedOpinion): string {
+  if (opinion.clusterAssignmentMethod === "nearest_centroid") {
+    return "가까운 군집으로 흡수";
+  }
+
+  if (opinion.isNoise) {
+    return "미분류";
+  }
+
+  return "HDBSCAN 군집";
+}
+
 export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps) {
   if (!opinion) {
     return (
@@ -42,6 +54,7 @@ export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps)
           <span>{opinion.category}</span>
           <span>{opinion.clusterLabel}</span>
           {opinion.isNoise && <span>미분류</span>}
+          {opinion.wasNoise && !opinion.isNoise && <span>노이즈 흡수</span>}
         </div>
         <p>{opinion.text}</p>
         <dl className="coordinate-grid">
@@ -60,6 +73,10 @@ export default function OpinionDetailPanel({ opinion }: OpinionDetailPanelProps)
           <div>
             <dt>군집 확률</dt>
             <dd>{formatProbability(opinion.clusterProbability)}</dd>
+          </div>
+          <div>
+            <dt>배정 방식</dt>
+            <dd>{assignmentLabel(opinion)}</dd>
           </div>
         </dl>
       </div>

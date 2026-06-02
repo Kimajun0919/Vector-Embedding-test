@@ -18,10 +18,13 @@ export interface AnalyzedOpinion extends Opinion {
   baseX?: number;
   baseY?: number;
   clusterId: number;
+  hdbscanClusterId?: number;
   clusterName: string;
   clusterLabel: string;
   clusterProbability?: number | null;
   isNoise?: boolean;
+  wasNoise?: boolean;
+  clusterAssignmentMethod?: "hdbscan" | "nearest_centroid" | "noise" | string;
   clusterRepresentative?: Opinion;
   similarOpinions: SimilarOpinion[];
 }
@@ -50,6 +53,8 @@ export interface AnalyzeOpinionsResponse {
     usePcaForClustering?: boolean;
     useClusterSpacing?: boolean;
     clusterSpacingFactor?: number;
+    reassignNoiseToNearestCluster?: boolean;
+    noiseReassignmentThreshold?: number;
     islandAnchorGap?: number;
     islandClusterRadius?: number;
     islandNoiseRadius?: number;

@@ -8,6 +8,7 @@ from clustering import (
     cluster_opinions_hdbscan,
     create_island_layout,
     exaggerate_cluster_spacing,
+    reassign_noise_to_nearest_cluster,
 )
 from config import OPINION_MAP_LAYOUT_CONFIG
 from projection import project_embeddings_umap
@@ -28,6 +29,12 @@ def analyze_opinion_embeddings(opinions, embeddings, config: dict[str, Any] | No
 
     similar_by_id = find_top_k_similar(opinions, normalized_embeddings, k=5)
     labels, probabilities = cluster_opinions_hdbscan(normalized_embeddings, layout_config)
+    labels, probabilities, hdbscan_labels, assignment_methods = reassign_noise_to_nearest_cluster(
+        normalized_embeddings,
+        labels,
+        probabilities,
+        layout_config,
+    )
     base_coordinates = project_embeddings_umap(normalized_embeddings, layout_config)
 
     final_coordinates = base_coordinates
@@ -56,6 +63,8 @@ def analyze_opinion_embeddings(opinions, embeddings, config: dict[str, Any] | No
         base_coordinates,
         final_coordinates,
         layout_config,
+        original_labels=hdbscan_labels,
+        assignment_methods=assignment_methods,
     )
 
     analyzed = []
@@ -95,6 +104,8 @@ def _public_layout_config(config: dict[str, Any]):
         "usePcaForClustering": config["use_pca_for_clustering"],
         "useClusterSpacing": config["use_cluster_spacing"],
         "clusterSpacingFactor": config["cluster_spacing_factor"],
+        "reassignNoiseToNearestCluster": config["reassign_noise_to_nearest_cluster"],
+        "noiseReassignmentThreshold": config["noise_reassignment_threshold"],
         "islandAnchorGap": config["island_anchor_gap"],
         "islandClusterRadius": config["island_cluster_radius"],
         "islandNoiseRadius": config["island_noise_radius"],

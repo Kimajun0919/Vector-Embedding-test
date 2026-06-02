@@ -42,6 +42,18 @@ function formatProbability(value?: number | null): string {
   return `${Math.round(value * 100)}%`;
 }
 
+function assignmentLabel(opinion: AnalyzedOpinion): string {
+  if (opinion.clusterAssignmentMethod === "nearest_centroid") {
+    return "가까운 군집으로 흡수";
+  }
+
+  if (opinion.isNoise) {
+    return "미분류";
+  }
+
+  return "HDBSCAN 군집";
+}
+
 function truncate(text: string, maxLength = 72): string {
   return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}...`;
 }
@@ -118,10 +130,12 @@ export default function OpinionMap({
                   `<b>${opinion.id}</b>`,
                   `군집: ${opinion.clusterLabel}`,
                   `군집 ID: ${opinion.clusterId}`,
+                  opinion.hdbscanClusterId !== undefined ? `HDBSCAN 원라벨: ${opinion.hdbscanClusterId}` : "",
+                  `배정 방식: ${assignmentLabel(opinion)}`,
                   `군집 확률: ${formatProbability(opinion.clusterProbability)}`,
                   `${opinion.responseType} / ${opinion.category}`,
                   truncate(opinion.text)
-                ].join("<br>")
+                ].filter(Boolean).join("<br>")
             ),
             customdata: opinions.map((opinion) => opinion.id),
             hovertemplate: "%{text}<extra></extra>",

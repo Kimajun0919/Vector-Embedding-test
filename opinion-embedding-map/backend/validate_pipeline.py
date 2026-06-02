@@ -1,7 +1,12 @@
 import numpy as np
 
 from analysis_pipeline import analyze_opinion_embeddings
-from clustering import build_cluster_payloads, create_island_layout, exaggerate_cluster_spacing
+from clustering import (
+    build_cluster_payloads,
+    create_island_layout,
+    exaggerate_cluster_spacing,
+    reassign_noise_to_nearest_cluster,
+)
 from config import OPINION_MAP_LAYOUT_CONFIG
 
 
@@ -10,6 +15,7 @@ def main():
     _assert_small_datasets()
     _assert_large_dataset()
     _assert_noise_payload()
+    _assert_noise_reassignment()
     _assert_cluster_spacing()
     _assert_island_layout()
     print("Backend opinion map pipeline validation passed.")
@@ -85,6 +91,34 @@ def _assert_noise_payload():
     noise_cluster = next(cluster for cluster in clusters if cluster["clusterId"] == -1)
     assert noise_cluster["isNoise"] is True
     assert noise_cluster["clusterName"] == OPINION_MAP_LAYOUT_CONFIG["noise_cluster_label"]
+
+
+def _assert_noise_reassignment():
+    vectors = np.asarray(
+        [
+            [1.0, 0.0, 0.0],
+            [0.98, 0.02, 0.0],
+            [0.97, 0.01, 0.0],
+            [0.0, 1.0, 0.0],
+        ],
+        dtype=float,
+    )
+    labels = [0, 0, -1, -1]
+    probabilities = [1.0, 0.9, 0.0, 0.0]
+    config = {**OPINION_MAP_LAYOUT_CONFIG, "noise_reassignment_threshold": 0.55}
+
+    reassigned_labels, reassigned_probabilities, original_labels, methods = reassign_noise_to_nearest_cluster(
+        vectors,
+        labels,
+        probabilities,
+        config,
+    )
+
+    assert original_labels == labels
+    assert reassigned_labels[2] == 0
+    assert methods[2] == "nearest_centroid"
+    assert reassigned_probabilities[2] > 0.55
+    assert reassigned_labels[3] == -1
 
 
 def _assert_cluster_spacing():

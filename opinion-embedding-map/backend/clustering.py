@@ -80,6 +80,51 @@ def cluster_opinions_hdbscan(normalized_embeddings, config: dict[str, Any]):
     return labels, probabilities
 
 
+def reassign_noise_to_nearest_cluster(normalized_embeddings, labels, probabilities, config: dict[str, Any]):
+    if not config["reassign_noise_to_nearest_cluster"]:
+        return labels, probabilities, labels[:], _assignment_methods(labels, labels, config["noise_cluster_id"])
+
+    vectors = np.asarray(normalized_embeddings, dtype=float)
+    label_array = np.asarray(labels, dtype=int)
+    probability_values = _probability_list(probabilities, len(labels))
+    original_labels = label_array.copy()
+    noise_label = config["noise_cluster_id"]
+    cluster_ids = sorted(label for label in set(label_array.tolist()) if label != noise_label)
+
+    if len(vectors) == 0 or not cluster_ids:
+        return labels, probability_values, original_labels.tolist(), _assignment_methods(original_labels, label_array, noise_label)
+
+    centroids = []
+    for cluster_id in cluster_ids:
+        cluster_vectors = vectors[label_array == cluster_id]
+        if len(cluster_vectors) == 0:
+            continue
+
+        centroid = cluster_vectors.mean(axis=0)
+        centroid_norm = np.linalg.norm(centroid)
+        if centroid_norm > 0:
+            centroid = centroid / centroid_norm
+        centroids.append((cluster_id, centroid))
+
+    if not centroids:
+        return labels, probability_values, original_labels.tolist(), _assignment_methods(original_labels, label_array, noise_label)
+
+    centroid_ids = [cluster_id for cluster_id, _ in centroids]
+    centroid_matrix = np.asarray([centroid for _, centroid in centroids], dtype=float)
+    threshold = config["noise_reassignment_threshold"]
+
+    for index in np.where(label_array == noise_label)[0]:
+        scores = centroid_matrix @ vectors[index]
+        best_position = int(np.argmax(scores))
+        best_score = float(scores[best_position])
+        if best_score >= threshold:
+            label_array[index] = int(centroid_ids[best_position])
+            probability_values[index] = best_score
+
+    assignment_methods = _assignment_methods(original_labels, label_array, noise_label)
+    return label_array.tolist(), probability_values, original_labels.tolist(), assignment_methods
+
+
 def exaggerate_cluster_spacing(coords, labels, factor=1.7, noise_label=-1):
     coordinate_array = np.asarray(coords, dtype=float)
     label_array = np.asarray(labels)
@@ -154,13 +199,17 @@ def build_cluster_payloads(
     base_coordinates,
     final_coordinates,
     config: dict[str, Any],
+    original_labels=None,
+    assignment_methods=None,
 ):
     if not opinions:
         return {}, []
 
     vectors = np.asarray(normalized_embeddings, dtype=float)
     label_array = np.asarray(labels, dtype=int)
+    original_label_array = np.asarray(original_labels if original_labels is not None else labels, dtype=int)
     probability_values = _probability_list(probabilities, len(opinions))
+    assignment_values = assignment_methods or _assignment_methods(original_label_array, label_array, config["noise_cluster_id"])
     base_array = np.asarray(base_coordinates, dtype=float)
     final_array = np.asarray(final_coordinates, dtype=float)
 
@@ -208,14 +257,18 @@ def build_cluster_payloads(
 
     for index, opinion in enumerate(opinions):
         cluster_id = int(label_array[index])
+        hdbscan_cluster_id = int(original_label_array[index])
         cluster_payload = cluster_by_label[cluster_id]
         is_noise = cluster_id == config["noise_cluster_id"]
         opinion_payload = {
             "clusterId": cluster_id,
+            "hdbscanClusterId": hdbscan_cluster_id,
             "clusterName": cluster_payload["clusterName"],
             "clusterLabel": cluster_payload["clusterLabel"],
             "clusterProbability": probability_values[index],
             "isNoise": is_noise,
+            "wasNoise": hdbscan_cluster_id == config["noise_cluster_id"],
+            "clusterAssignmentMethod": assignment_values[index],
         }
         if "representativeOpinion" in cluster_payload:
             opinion_payload["clusterRepresentative"] = cluster_payload["representativeOpinion"]
@@ -230,6 +283,22 @@ def _ordered_island_labels(label_array, noise_label: int):
     non_noise_labels = [label for label in labels if label != noise_label]
     noise_labels = [label for label in labels if label == noise_label]
     return non_noise_labels + noise_labels
+
+
+def _assignment_methods(original_labels, labels, noise_label: int):
+    original_array = np.asarray(original_labels, dtype=int)
+    label_array = np.asarray(labels, dtype=int)
+    methods = []
+
+    for original_label, label in zip(original_array, label_array):
+        if original_label == noise_label and label != noise_label:
+            methods.append("nearest_centroid")
+        elif label == noise_label:
+            methods.append("noise")
+        else:
+            methods.append("hdbscan")
+
+    return methods
 
 
 def _grid_anchors(count: int, gap: float):

@@ -15,6 +15,8 @@ OPINION_MAP_LAYOUT_CONFIG = {
     "island_anchor_gap": 6.0,
     "island_cluster_radius": 1.15,
     "island_noise_radius": 1.0,
+    "reassign_noise_to_nearest_cluster": True,
+    "noise_reassignment_threshold": 0.55,
     "noise_cluster_id": -1,
     "noise_cluster_label": "미분류",
     "default_cluster_label": "전체 의견",
