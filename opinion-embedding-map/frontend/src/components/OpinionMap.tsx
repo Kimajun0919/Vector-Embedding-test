@@ -46,6 +46,24 @@ function truncate(text: string, maxLength = 72): string {
   return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}...`;
 }
 
+function layoutDescription(
+  layoutMode: AnalyzeOpinionsResponse["layoutMode"],
+  spacingFactor: number,
+  islandAnchorGap?: number
+): string {
+  if (layoutMode === "island") {
+    return `구역 분리 보기: 각 군집과 미분류 의견을 별도 구역으로 완전히 나누어 배치했습니다. 구역 간격은 ${(
+      islandAnchorGap ?? 6
+    ).toFixed(1)}입니다.`;
+  }
+
+  if (layoutMode === "cluster_emphasized") {
+    return `군집 강조 보기: 군집 간 거리를 시각적 구분을 위해 ${spacingFactor.toFixed(1)}배 보정했습니다.`;
+  }
+
+  return "UMAP 기본 배치 보기";
+}
+
 export default function OpinionMap({
   opinions,
   clusters,
@@ -56,6 +74,7 @@ export default function OpinionMap({
 }: OpinionMapProps) {
   const labelClusters = clusters.filter((cluster) => cluster.count > 0);
   const spacingFactor = layoutConfig?.clusterSpacingFactor ?? 1.7;
+  const islandAnchorGap = layoutConfig?.islandAnchorGap;
 
   const handleClick = (event: PlotMouseEvent) => {
     const point = event.points[0];
@@ -81,11 +100,7 @@ export default function OpinionMap({
       <div className="map-header">
         <div>
           <h2>의견 임베딩 지도</h2>
-          <p>
-            {layoutMode === "cluster_emphasized"
-              ? `군집 강조 보기: 군집 간 거리를 시각적 구분을 위해 ${spacingFactor.toFixed(1)}배 보정했습니다.`
-              : "UMAP 기본 배치 보기"}
-          </p>
+          <p>{layoutDescription(layoutMode, spacingFactor, islandAnchorGap)}</p>
         </div>
       </div>
 

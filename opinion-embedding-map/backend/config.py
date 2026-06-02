@@ -12,8 +12,11 @@ OPINION_MAP_LAYOUT_CONFIG = {
     "random_state": 42,
     "use_cluster_spacing": True,
     "cluster_spacing_factor": 1.7,
+    "island_anchor_gap": 6.0,
+    "island_cluster_radius": 1.15,
+    "island_noise_radius": 1.0,
     "noise_cluster_id": -1,
     "noise_cluster_label": "미분류",
     "default_cluster_label": "전체 의견",
-    "use_island_layout": False,
+    "use_island_layout": True,
 }

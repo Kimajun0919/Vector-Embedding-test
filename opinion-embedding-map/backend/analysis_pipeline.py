@@ -6,6 +6,7 @@ from sklearn.preprocessing import normalize
 from clustering import (
     build_cluster_payloads,
     cluster_opinions_hdbscan,
+    create_island_layout,
     exaggerate_cluster_spacing,
 )
 from config import OPINION_MAP_LAYOUT_CONFIG
@@ -31,7 +32,14 @@ def analyze_opinion_embeddings(opinions, embeddings, config: dict[str, Any] | No
 
     final_coordinates = base_coordinates
     layout_mode = "umap"
-    if layout_config["use_cluster_spacing"] and not layout_config["use_island_layout"]:
+    if layout_config["use_island_layout"]:
+        final_coordinates = create_island_layout(
+            base_coordinates,
+            labels,
+            layout_config,
+        )
+        layout_mode = "island"
+    elif layout_config["use_cluster_spacing"]:
         final_coordinates = exaggerate_cluster_spacing(
             base_coordinates,
             labels,
@@ -76,7 +84,7 @@ def _empty_response(config: dict[str, Any]):
     return {
         "opinions": [],
         "clusters": [],
-        "layoutMode": "cluster_emphasized" if config["use_cluster_spacing"] else "umap",
+        "layoutMode": _layout_mode(config),
         "layoutConfig": _public_layout_config(config),
     }
 
@@ -87,9 +95,20 @@ def _public_layout_config(config: dict[str, Any]):
         "usePcaForClustering": config["use_pca_for_clustering"],
         "useClusterSpacing": config["use_cluster_spacing"],
         "clusterSpacingFactor": config["cluster_spacing_factor"],
+        "islandAnchorGap": config["island_anchor_gap"],
+        "islandClusterRadius": config["island_cluster_radius"],
+        "islandNoiseRadius": config["island_noise_radius"],
         "umapNeighbors": config["umap_neighbors"],
         "umapMinDist": config["umap_min_dist"],
         "umapSpread": config["umap_spread"],
         "umapMetric": config["umap_metric"],
         "useIslandLayout": config["use_island_layout"],
     }
+
+
+def _layout_mode(config: dict[str, Any]):
+    if config["use_island_layout"]:
+        return "island"
+    if config["use_cluster_spacing"]:
+        return "cluster_emphasized"
+    return "umap"

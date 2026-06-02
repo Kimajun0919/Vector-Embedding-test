@@ -44,12 +44,15 @@ export interface OpinionCluster {
 export interface AnalyzeOpinionsResponse {
   opinions: AnalyzedOpinion[];
   clusters: OpinionCluster[];
-  layoutMode?: "cluster_emphasized" | "umap" | string;
+  layoutMode?: "island" | "cluster_emphasized" | "umap" | string;
   layoutConfig?: {
     clusteringMethod?: string;
     usePcaForClustering?: boolean;
     useClusterSpacing?: boolean;
     clusterSpacingFactor?: number;
+    islandAnchorGap?: number;
+    islandClusterRadius?: number;
+    islandNoiseRadius?: number;
     umapNeighbors?: number;
     umapMinDist?: number;
     umapSpread?: number;

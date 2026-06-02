@@ -113,6 +113,39 @@ def exaggerate_cluster_spacing(coords, labels, factor=1.7, noise_label=-1):
     return adjusted.tolist()
 
 
+def create_island_layout(coords, labels, config: dict[str, Any]):
+    coordinate_array = np.asarray(coords, dtype=float)
+    label_array = np.asarray(labels)
+
+    if len(coordinate_array) == 0:
+        return coordinate_array.tolist()
+
+    if len(coordinate_array) != len(label_array):
+        return coordinate_array.tolist()
+
+    noise_label = config["noise_cluster_id"]
+    ordered_labels = _ordered_island_labels(label_array, noise_label)
+    if len(ordered_labels) <= 1:
+        return coordinate_array.tolist()
+
+    anchors = _grid_anchors(len(ordered_labels), gap=config["island_anchor_gap"])
+    adjusted = coordinate_array.copy()
+
+    for anchor_index, label in enumerate(ordered_labels):
+        member_mask = label_array == label
+        if member_mask.sum() == 0:
+            continue
+
+        radius = config["island_noise_radius"] if label == noise_label else config["island_cluster_radius"]
+        adjusted[member_mask] = _compact_points_around_anchor(
+            coordinate_array[member_mask],
+            anchors[anchor_index],
+            radius=radius,
+        )
+
+    return adjusted.tolist()
+
+
 def build_cluster_payloads(
     opinions,
     normalized_embeddings,
@@ -190,6 +223,63 @@ def build_cluster_payloads(
         opinion_cluster_by_id[opinion["id"]] = opinion_payload
 
     return opinion_cluster_by_id, list(cluster_by_label.values())
+
+
+def _ordered_island_labels(label_array, noise_label: int):
+    labels = sorted(set(label_array.tolist()))
+    non_noise_labels = [label for label in labels if label != noise_label]
+    noise_labels = [label for label in labels if label == noise_label]
+    return non_noise_labels + noise_labels
+
+
+def _grid_anchors(count: int, gap: float):
+    if count <= 0:
+        return np.empty((0, 2), dtype=float)
+
+    columns = int(np.ceil(np.sqrt(count)))
+    rows = int(np.ceil(count / columns))
+    anchors = []
+
+    for index in range(count):
+        row = index // columns
+        column = index % columns
+        x = (column - (columns - 1) / 2.0) * gap
+        y = ((rows - 1) / 2.0 - row) * gap
+        anchors.append([x, y])
+
+    return np.asarray(anchors, dtype=float)
+
+
+def _compact_points_around_anchor(points, anchor, radius: float):
+    point_array = np.asarray(points, dtype=float)
+    anchor_array = np.asarray(anchor, dtype=float)
+
+    if len(point_array) == 1:
+        return anchor_array.reshape(1, 2)
+
+    centered = point_array - point_array.mean(axis=0)
+    distances = np.linalg.norm(centered, axis=1)
+    max_distance = float(distances.max()) if len(distances) else 0.0
+
+    if max_distance <= 1e-9:
+        return _packed_points(anchor_array, len(point_array), radius * 0.35)
+
+    return anchor_array + centered * (radius / max_distance)
+
+
+def _packed_points(anchor, count: int, radius: float):
+    if count <= 1:
+        return anchor.reshape(1, 2)
+
+    points = []
+    for index in range(count):
+        angle = (2.0 * np.pi * index) / count
+        points.append([
+            anchor[0] + radius * np.cos(angle),
+            anchor[1] + radius * np.sin(angle),
+        ])
+
+    return np.asarray(points, dtype=float)
 
 
 def _fit_hdbscan(clustering_input, min_cluster_size: int, min_samples: int):

@@ -1,7 +1,7 @@
 import numpy as np
 
 from analysis_pipeline import analyze_opinion_embeddings
-from clustering import build_cluster_payloads, exaggerate_cluster_spacing
+from clustering import build_cluster_payloads, create_island_layout, exaggerate_cluster_spacing
 from config import OPINION_MAP_LAYOUT_CONFIG
 
 
@@ -11,6 +11,7 @@ def main():
     _assert_large_dataset()
     _assert_noise_payload()
     _assert_cluster_spacing()
+    _assert_island_layout()
     print("Backend opinion map pipeline validation passed.")
 
 
@@ -58,6 +59,7 @@ def _assert_large_dataset():
     result = analyze_opinion_embeddings(_opinions(100), _embeddings(100))
     assert len(result["opinions"]) == 100
     assert result["clusters"]
+    assert result["layoutMode"] == "island"
     assert all("clusterId" in opinion for opinion in result["opinions"])
     assert all("baseX" in opinion and "baseY" in opinion for opinion in result["opinions"])
     assert result["opinions"][0]["similarOpinions"]
@@ -93,6 +95,31 @@ def _assert_cluster_spacing():
     assert coordinates[0] == [-1.0, 0.0]
     assert adjusted[0][0] < coordinates[0][0]
     assert adjusted[2][0] > coordinates[2][0]
+
+
+def _assert_island_layout():
+    coordinates = [
+        [-2.0, 0.0],
+        [-1.8, 0.1],
+        [0.0, 2.0],
+        [0.1, 1.8],
+        [3.0, 0.0],
+        [-3.0, 0.5],
+    ]
+    labels = [0, 0, 1, 1, -1, -1]
+    adjusted = np.asarray(create_island_layout(coordinates, labels, OPINION_MAP_LAYOUT_CONFIG), dtype=float)
+    label_array = np.asarray(labels)
+
+    centers = {
+        label: adjusted[label_array == label].mean(axis=0)
+        for label in sorted(set(labels))
+    }
+    assert np.linalg.norm(centers[0] - centers[1]) >= OPINION_MAP_LAYOUT_CONFIG["island_anchor_gap"] * 0.8
+    assert np.linalg.norm(centers[-1] - centers[0]) >= OPINION_MAP_LAYOUT_CONFIG["island_anchor_gap"] * 0.8
+
+    noise_points = adjusted[label_array == -1]
+    noise_radius = np.linalg.norm(noise_points - noise_points.mean(axis=0), axis=1).max()
+    assert noise_radius <= OPINION_MAP_LAYOUT_CONFIG["island_noise_radius"] + 1e-9
 
 
 if __name__ == "__main__":
