@@ -1,6 +1,6 @@
 # AI 공공서비스 시민 의견 임베딩 지도
 
-LUXIA Cloud Vector Embedding API, cosine similarity, UMAP, KMeans 군집화를 사용해 시민 의견 100건을 2D 의견 지도로 시각화하는 로컬 풀스택 프로토타입입니다.
+LUXIA Cloud Vector Embedding API, cosine similarity, HDBSCAN 군집화, UMAP, 군집 간격 강조를 사용해 시민 의견 100건을 2D 의견 지도로 시각화하는 로컬 풀스택 프로토타입입니다.
 
 의견 지도는 x축과 y축 자체를 해석하는 도구가 아닙니다. 각 점 사이의 거리, 군집, 군집 대표 의견을 기준으로 의견 구조를 살펴보는 도구입니다.
 
@@ -18,9 +18,11 @@ AI 기반 공공서비스 도입에 대한 시민 의견
 2. FastAPI 백엔드가 LUXIA Cloud Embedding API를 호출해 실제 임베딩 벡터를 생성합니다.
 3. 임베딩 벡터 간 cosine similarity를 계산합니다.
 4. 각 의견마다 Top 5 유사 의견을 찾습니다.
-5. UMAP으로 임베딩 벡터를 2차원 좌표로 축소합니다.
-6. KMeans로 임베딩 기반 군집을 만들고, 각 군집의 대표 의견을 계산합니다.
-7. React + Plotly.js 프론트엔드에서 의견 지도를 시각화합니다.
+5. 임베딩 벡터를 L2 정규화합니다.
+6. PCA 전처리 후 HDBSCAN으로 의미 군집과 노이즈 의견을 판정합니다.
+7. UMAP으로 정규화된 임베딩 벡터를 2차원 기본 좌표로 축소합니다.
+8. HDBSCAN 군집 라벨을 기준으로 군집 간 거리를 시각적으로 강조합니다.
+9. React + Plotly.js 프론트엔드에서 의견 지도를 시각화합니다.
 
 API 키는 `backend/.env`에만 저장하며, 프론트엔드에는 노출하지 않습니다. 프론트엔드는 FastAPI 백엔드만 호출합니다.
 
@@ -29,11 +31,12 @@ API 키는 `backend/.env`에만 저장하며, 프론트엔드에는 노출하지
 - 한국어 시민 의견 100건 제공
 - LUXIA Cloud Embedding API 기반 실제 임베딩 생성
 - cosine similarity 기반 Top 5 유사 의견 탐색
-- UMAP 기반 2D 좌표 생성
-- KMeans 기반 군집화
+- UMAP 기반 2D 기본 좌표 생성
+- HDBSCAN 기반 의미 군집화 및 노이즈 의견 처리
+- 군집 간격 강조 기반 최종 지도 좌표 생성
 - 군집별 대표 의견 자동 선정
 - Plotly.js 기반 인터랙티브 의견 지도
-- 점 클릭 시 선택 의견, 군집 대표 의견, 유사 의견 표시
+- 점 클릭 시 선택 의견, 군집 대표 의견, 군집 확률, 유사 의견 표시
 
 ## 기술 스택
 
@@ -256,8 +259,9 @@ curl --location 'https://bridge.luxiacloud.com/luxia/v1/embedding' \
 - x축과 y축 자체에는 고정된 의미가 없습니다.
 - x축은 찬성/반대가 아닙니다.
 - y축은 중요도/강도가 아닙니다.
-- 좌표는 UMAP이 임베딩 벡터 간 거리 관계를 2차원으로 축소한 결과입니다.
-- 점 색상은 임베딩 기반 KMeans 군집을 의미합니다.
+- `baseX`, `baseY`는 UMAP이 임베딩 벡터 간 거리 관계를 2차원으로 축소한 기본 좌표입니다.
+- `x`, `y`는 군집 간 시각적 구분을 위해 보정된 최종 표시 좌표입니다.
+- 점 색상은 HDBSCAN 기반 의미 군집을 의미하며, 미분류 노이즈 의견은 중립색으로 표시됩니다.
 - 군집명은 해당 군집의 중심에 가장 가까운 대표 의견 문장을 짧게 줄인 값입니다.
 - 점을 클릭하면 오른쪽 패널에서 선택 의견, 군집 대표 의견, Top 5 유사 의견을 확인할 수 있습니다.
 
@@ -272,11 +276,12 @@ cosine similarity 해석 기준:
 
 ## 군집 대표 의견 선정 방식
 
-1. 각 의견의 LUXIA embedding을 정규화합니다.
-2. 정규화된 벡터를 KMeans로 군집화합니다.
-3. 각 군집의 centroid와 가장 가까운 의견을 찾습니다.
-4. 해당 의견을 `clusterRepresentative`로 사용합니다.
-5. 대표 의견 문장을 짧게 줄여 `clusterName`으로 표시합니다.
+1. 각 의견의 LUXIA embedding을 L2 정규화합니다.
+2. 정규화된 벡터를 PCA로 전처리합니다.
+3. PCA 결과를 HDBSCAN으로 군집화하고 `-1` 노이즈 라벨을 유지합니다.
+4. 각 비노이즈 군집의 centroid와 가장 가까운 의견을 찾습니다.
+5. 해당 의견을 `clusterRepresentative`로 사용합니다.
+6. 대표 의견 또는 우세 category를 기준으로 `clusterName`을 생성합니다.
 
 현재 기본 군집 수는 `backend/main.py`에서 `n_clusters=6`으로 설정되어 있습니다.
 

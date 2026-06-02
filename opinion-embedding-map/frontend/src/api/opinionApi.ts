@@ -1,4 +1,4 @@
-import type { AnalyzedOpinion, Opinion } from "../types/opinion";
+import type { AnalyzedOpinion, AnalyzeOpinionsResponse, Opinion } from "../types/opinion";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -25,11 +25,21 @@ export async function getSampleOpinions(): Promise<Opinion[]> {
   return data.opinions;
 }
 
-export async function analyzeOpinions(opinions?: Opinion[]): Promise<AnalyzedOpinion[]> {
+export async function analyzeOpinions(opinions?: Opinion[]): Promise<AnalyzeOpinionsResponse> {
   const body = opinions ? JSON.stringify({ opinions }) : JSON.stringify({});
-  const data = await request<{ opinions: AnalyzedOpinion[] }>("/api/analyze-opinions", {
+  const data = await request<AnalyzeOpinionsResponse | AnalyzedOpinion[]>("/api/analyze-opinions", {
     method: "POST",
     body
   });
-  return data.opinions;
+
+  if (Array.isArray(data)) {
+    return { opinions: data, clusters: [] };
+  }
+
+  return {
+    opinions: data.opinions ?? [],
+    clusters: data.clusters ?? [],
+    layoutMode: data.layoutMode,
+    layoutConfig: data.layoutConfig
+  };
 }

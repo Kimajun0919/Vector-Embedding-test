@@ -1,9 +1,9 @@
-export type ResponseType = "주관식" | "객관식-단일" | "객관식-복수";
+export type ResponseType = string;
 
 export interface Opinion {
   id: string;
   text: string;
-  responseType: ResponseType | string;
+  responseType: ResponseType;
   category: string;
 }
 
@@ -12,14 +12,48 @@ export interface SimilarOpinion extends Opinion {
   interpretation?: string;
 }
 
-export interface ClusterRepresentative extends Opinion {}
-
 export interface AnalyzedOpinion extends Opinion {
   x: number;
   y: number;
+  baseX?: number;
+  baseY?: number;
   clusterId: number;
   clusterName: string;
   clusterLabel: string;
-  clusterRepresentative: ClusterRepresentative;
+  clusterProbability?: number | null;
+  isNoise?: boolean;
+  clusterRepresentative?: Opinion;
   similarOpinions: SimilarOpinion[];
+}
+
+export interface OpinionCluster {
+  clusterId: number;
+  clusterName: string;
+  clusterLabel: string;
+  count: number;
+  summary?: string;
+  centerX: number;
+  centerY: number;
+  baseCenterX?: number;
+  baseCenterY?: number;
+  representativeOpinion?: Opinion;
+  representativeOpinions?: Opinion[];
+  isNoise?: boolean;
+}
+
+export interface AnalyzeOpinionsResponse {
+  opinions: AnalyzedOpinion[];
+  clusters: OpinionCluster[];
+  layoutMode?: "cluster_emphasized" | "umap" | string;
+  layoutConfig?: {
+    clusteringMethod?: string;
+    usePcaForClustering?: boolean;
+    useClusterSpacing?: boolean;
+    clusterSpacingFactor?: number;
+    umapNeighbors?: number;
+    umapMinDist?: number;
+    umapSpread?: number;
+    umapMetric?: string;
+    useIslandLayout?: boolean;
+  };
 }

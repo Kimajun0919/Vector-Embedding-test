@@ -4,11 +4,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from clustering import build_embedding_clusters
+from analysis_pipeline import analyze_opinion_embeddings
 from luxia_client import LuxiaEmbeddingError, get_embeddings
-from projection import project_embeddings_umap
 from sample_data import SAMPLE_OPINIONS
-from similarity import find_top_k_similar
 
 
 class Opinion(BaseModel):
@@ -40,10 +38,13 @@ async def get_sample_opinions():
 
 @app.post("/api/analyze-opinions")
 async def analyze_opinions(request: Optional[AnalyzeRequest] = None):
-    opinions = [item.model_dump() for item in request.opinions] if request and request.opinions else SAMPLE_OPINIONS
+    if request is not None and request.opinions is not None:
+        opinions = [item.model_dump() for item in request.opinions]
+    else:
+        opinions = SAMPLE_OPINIONS
 
     if not opinions:
-        raise HTTPException(status_code=400, detail="No opinions were provided.")
+        return analyze_opinion_embeddings([], [])
 
     missing_fields = [opinion.get("id", "<unknown>") for opinion in opinions if not opinion.get("text")]
     if missing_fields:
@@ -53,22 +54,8 @@ async def analyze_opinions(request: Optional[AnalyzeRequest] = None):
 
     try:
         embeddings = await get_embeddings(texts)
-        similar_by_id = find_top_k_similar(opinions, embeddings, k=5)
-        cluster_by_id = build_embedding_clusters(opinions, embeddings, n_clusters=6)
-        coordinates = project_embeddings_umap(embeddings)
+        return analyze_opinion_embeddings(opinions, embeddings)
     except LuxiaEmbeddingError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}") from exc
-
-    analyzed = []
-    for opinion, point in zip(opinions, coordinates):
-        analyzed.append({
-            **opinion,
-            "x": point["x"],
-            "y": point["y"],
-            **cluster_by_id[opinion["id"]],
-            "similarOpinions": similar_by_id[opinion["id"]],
-        })
-
-    return {"opinions": analyzed}
