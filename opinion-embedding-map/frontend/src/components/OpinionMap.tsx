@@ -87,6 +87,13 @@ export default function OpinionMap({
   const labelClusters = clusters.filter((cluster) => cluster.count > 0);
   const spacingFactor = layoutConfig?.clusterSpacingFactor ?? 1.7;
   const islandAnchorGap = layoutConfig?.islandAnchorGap;
+  const xAxisTitle = layoutConfig?.xAxisTitle ?? "구역 X";
+  const yAxisTitle = layoutConfig?.yAxisTitle ?? "구역 Y";
+  const xAxisDescription = layoutConfig?.xAxisDescription ?? "좌우 위치는 군집 구역을 분리하기 위한 표시 좌표입니다.";
+  const yAxisDescription = layoutConfig?.yAxisDescription ?? "상하 위치는 군집 구역을 분리하기 위한 표시 좌표입니다.";
+  const coordinateNote = layoutConfig?.coordinateNote ?? "baseX/baseY는 UMAP 원본 좌표이고 x/y는 최종 표시 좌표입니다.";
+  const legendTitle = layoutConfig?.legendTitle ?? "군집 범례";
+  const legendDescription = layoutConfig?.legendDescription ?? "색상은 최종 군집을 의미하고 회색은 미분류 의견입니다.";
 
   const handleClick = (event: PlotMouseEvent) => {
     const point = event.points[0];
@@ -172,8 +179,8 @@ export default function OpinionMap({
           margin: { l: 54, r: 22, t: 14, b: 54 },
           paper_bgcolor: "#ffffff",
           plot_bgcolor: "#f8fafc",
-          xaxis: { title: { text: "UMAP X" }, zeroline: false, gridcolor: "#e5e7eb" },
-          yaxis: { title: { text: "UMAP Y" }, zeroline: false, gridcolor: "#e5e7eb" },
+          xaxis: { title: { text: xAxisTitle }, zeroline: false, gridcolor: "#e5e7eb" },
+          yaxis: { title: { text: yAxisTitle }, zeroline: false, gridcolor: "#e5e7eb" },
           showlegend: false,
           hoverlabel: { align: "left" }
         }}
@@ -183,9 +190,25 @@ export default function OpinionMap({
         onClick={handleClick}
       />
 
+      <div className="axis-guide">
+        <div>
+          <strong>{xAxisTitle}</strong>
+          <p>{xAxisDescription}</p>
+        </div>
+        <div>
+          <strong>{yAxisTitle}</strong>
+          <p>{yAxisDescription}</p>
+        </div>
+        <div>
+          <strong>좌표 기준</strong>
+          <p>{coordinateNote}</p>
+        </div>
+      </div>
+
       {clusters.length > 0 && (
         <div className="cluster-legend">
-          <h3>군집 요약</h3>
+          <h3>{legendTitle}</h3>
+          <p className="cluster-legend-description">{legendDescription}</p>
           <div className="cluster-legend-list">
             {clusters.map((cluster) => (
               <article className="cluster-legend-row" key={cluster.clusterId}>

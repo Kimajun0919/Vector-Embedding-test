@@ -114,6 +114,13 @@ def _public_layout_config(config: dict[str, Any]):
         "umapSpread": config["umap_spread"],
         "umapMetric": config["umap_metric"],
         "useIslandLayout": config["use_island_layout"],
+        "xAxisTitle": config["x_axis_title"],
+        "yAxisTitle": config["y_axis_title"],
+        "xAxisDescription": config["x_axis_description"],
+        "yAxisDescription": config["y_axis_description"],
+        "coordinateNote": config["coordinate_note"],
+        "legendTitle": config["legend_title"],
+        "legendDescription": config["legend_description"],
     }
 
 

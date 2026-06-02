@@ -21,4 +21,11 @@ OPINION_MAP_LAYOUT_CONFIG = {
     "noise_cluster_label": "미분류",
     "default_cluster_label": "전체 의견",
     "use_island_layout": True,
+    "x_axis_title": "구역 X",
+    "y_axis_title": "구역 Y",
+    "x_axis_description": "좌우 위치는 군집 구역을 분리하기 위한 표시 좌표이며 찬성/반대 같은 고정 의미가 아닙니다.",
+    "y_axis_description": "상하 위치는 군집 구역을 분리하기 위한 표시 좌표이며 중요도/강도 같은 고정 의미가 아닙니다.",
+    "coordinate_note": "baseX/baseY는 UMAP 원본 좌표이고 x/y는 구역 분리를 위해 보정된 최종 표시 좌표입니다.",
+    "legend_title": "군집 범례",
+    "legend_description": "색상은 최종 군집을 의미하고 회색은 가까운 군집으로 흡수되지 않은 미분류 의견입니다.",
 }

@@ -141,6 +141,34 @@ h1 {
   line-height: 1.5;
 }
 
+.axis-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 18px 16px;
+}
+
+.axis-guide div {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  padding: 10px 12px;
+}
+
+.axis-guide strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.axis-guide p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .detail-panel {
   min-height: 620px;
   padding: 18px;
@@ -248,6 +276,13 @@ h1 {
   font-size: 15px;
 }
 
+.cluster-legend-description {
+  margin: -6px 0 12px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .cluster-legend-list {
   display: grid;
   gap: 10px;
@@ -319,6 +354,10 @@ h1 {
   }
 
   .coordinate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .axis-guide {
     grid-template-columns: 1fr;
   }
 }

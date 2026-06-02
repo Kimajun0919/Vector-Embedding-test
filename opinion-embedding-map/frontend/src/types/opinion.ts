@@ -63,5 +63,12 @@ export interface AnalyzeOpinionsResponse {
     umapSpread?: number;
     umapMetric?: string;
     useIslandLayout?: boolean;
+    xAxisTitle?: string;
+    yAxisTitle?: string;
+    xAxisDescription?: string;
+    yAxisDescription?: string;
+    coordinateNote?: string;
+    legendTitle?: string;
+    legendDescription?: string;
   };
 }

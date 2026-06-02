@@ -263,6 +263,7 @@ curl --location 'https://bridge.luxiacloud.com/luxia/v1/embedding' \
 - `baseX`, `baseY`는 UMAP이 임베딩 벡터 간 거리 관계를 2차원으로 축소한 기본 좌표입니다.
 - `x`, `y`는 군집과 미분류 의견을 별도 구역으로 나누기 위해 보정된 최종 표시 좌표입니다.
 - 점 색상은 최종 의미 군집을 의미하며, 가까운 군집으로 흡수되지 않은 미분류 노이즈 의견은 중립색의 독립 구역으로 표시됩니다.
+- 지도 축 제목, 축 설명, 범례 설명은 `backend/config.py`의 `x_axis_title`, `y_axis_title`, `x_axis_description`, `y_axis_description`, `legend_title`, `legend_description`에서 조정할 수 있습니다.
 - 군집명은 해당 군집의 중심에 가장 가까운 대표 의견 문장을 짧게 줄인 값입니다.
 - 점을 클릭하면 오른쪽 패널에서 선택 의견, 군집 대표 의견, Top 5 유사 의견을 확인할 수 있습니다.
 
