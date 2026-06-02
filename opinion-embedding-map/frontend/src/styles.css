@@ -141,6 +141,33 @@ h1 {
   line-height: 1.5;
 }
 
+.layout-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-self: flex-start;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 4px;
+}
+
+.layout-toggle button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.layout-toggle button.active {
+  background: #111827;
+  color: white;
+}
+
 .axis-guide {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -346,6 +373,10 @@ h1 {
 
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .map-header {
+    flex-direction: column;
   }
 
   .detail-panel,

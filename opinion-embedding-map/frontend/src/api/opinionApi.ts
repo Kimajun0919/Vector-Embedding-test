@@ -40,6 +40,7 @@ export async function analyzeOpinions(opinions?: Opinion[]): Promise<AnalyzeOpin
     opinions: data.opinions ?? [],
     clusters: data.clusters ?? [],
     layoutMode: data.layoutMode,
-    layoutConfig: data.layoutConfig
+    layoutConfig: data.layoutConfig,
+    layouts: data.layouts
   };
 }

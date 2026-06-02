@@ -65,6 +65,7 @@ export default function App() {
             clusters={analysisResult?.clusters ?? []}
             layoutMode={analysisResult?.layoutMode}
             layoutConfig={analysisResult?.layoutConfig}
+            layouts={analysisResult?.layouts}
             selectedOpinionId={selectedOpinion?.id}
             onSelectOpinion={setSelectedOpinion}
           />

@@ -17,6 +17,10 @@ export interface AnalyzedOpinion extends Opinion {
   y: number;
   baseX?: number;
   baseY?: number;
+  islandX?: number;
+  islandY?: number;
+  issueX?: number;
+  issueY?: number;
   clusterId: number;
   hdbscanClusterId?: number;
   clusterName: string;
@@ -47,7 +51,7 @@ export interface OpinionCluster {
 export interface AnalyzeOpinionsResponse {
   opinions: AnalyzedOpinion[];
   clusters: OpinionCluster[];
-  layoutMode?: "island" | "cluster_emphasized" | "umap" | string;
+  layoutMode?: "island" | "issue_axes" | "cluster_emphasized" | "umap" | string;
   layoutConfig?: {
     clusteringMethod?: string;
     usePcaForClustering?: boolean;
@@ -71,4 +75,31 @@ export interface AnalyzeOpinionsResponse {
     legendTitle?: string;
     legendDescription?: string;
   };
+  layouts?: OpinionMapLayouts;
+}
+
+export interface OpinionAxisMetadata {
+  title: string;
+  negativeLabel?: string;
+  positiveLabel?: string;
+  description?: string;
+  explainedVarianceRatio?: number;
+}
+
+export interface OpinionLayoutMetadata {
+  mode: string;
+  title: string;
+  description?: string;
+  coordinateNote?: string;
+  xAxis?: OpinionAxisMetadata;
+  yAxis?: OpinionAxisMetadata;
+  legendTitle?: string;
+  legendDescription?: string;
+}
+
+export interface OpinionMapLayouts {
+  defaultMode: "island" | "issue_axes" | "cluster_emphasized" | "umap" | string;
+  availableModes: string[];
+  island?: OpinionLayoutMetadata;
+  issueAxes?: OpinionLayoutMetadata;
 }

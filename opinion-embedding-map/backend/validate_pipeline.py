@@ -53,12 +53,15 @@ def _assert_small_datasets():
     one = analyze_opinion_embeddings(_opinions(1), _embeddings(1))
     assert len(one["opinions"]) == 1
     assert one["opinions"][0]["x"] == 0.0
+    assert one["opinions"][0]["issueX"] == 0.0
+    assert one["opinions"][0]["issueY"] == 0.0
     assert one["opinions"][0]["clusterId"] == 0
 
     four = analyze_opinion_embeddings(_opinions(4), _embeddings(4))
     assert len(four["opinions"]) == 4
     assert len(four["clusters"]) == 1
     assert all("x" in opinion and "y" in opinion for opinion in four["opinions"])
+    assert all("issueX" in opinion and "issueY" in opinion for opinion in four["opinions"])
 
 
 def _assert_large_dataset():
@@ -66,8 +69,13 @@ def _assert_large_dataset():
     assert len(result["opinions"]) == 100
     assert result["clusters"]
     assert result["layoutMode"] == "island"
+    assert "issue_axes" in result["layouts"]["availableModes"]
+    assert result["layouts"]["issueAxes"]["xAxis"]["negativeLabel"]
+    assert result["layouts"]["issueAxes"]["xAxis"]["positiveLabel"]
     assert all("clusterId" in opinion for opinion in result["opinions"])
     assert all("baseX" in opinion and "baseY" in opinion for opinion in result["opinions"])
+    assert all("islandX" in opinion and "islandY" in opinion for opinion in result["opinions"])
+    assert all("issueX" in opinion and "issueY" in opinion for opinion in result["opinions"])
     assert result["opinions"][0]["similarOpinions"]
 
 
